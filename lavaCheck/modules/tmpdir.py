@@ -15,3 +15,18 @@
 # You should have received a copy of the GNU General Public License
 # along with LavaCheck. If not, see <http://www.gnu.org/licenses/>.
 #
+import os
+from lavaCheck.generic import *
+class CheckTmpDir(Check):
+	def pre(self):
+		try:
+			tmpdir=os.environ["TMPDIR"]
+		except KeyError:
+			tmpdir="/tmp"
+			self.log.debug("TMPDIR not defined, defaulting to: %s" % tmpdir)
+		if not os.path.isdir(tmpdir):
+			raise NodeSoftFailError("TMPDIR: %s is not a directory." % tmpdir)
+		if tmpdir == "/tmp":
+			perms=oct(os.stat(tmpdir).st_mode)[-4:]
+			if perms != '1777':
+				raise NodeHardFailError("Invalid perisions %s for directory: %s" % (perms, tmpdir))
